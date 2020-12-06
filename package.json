@@ -15,5 +15,11 @@
   "bugs": {
     "url": "https://github.com/PeterTadich/geometric-jacobian/issues"
   },
-  "homepage": "https://github.com/PeterTadich/geometric-jacobian#readme"
+  "homepage": "https://github.com/PeterTadich/geometric-jacobian#readme",
+  "dependencies": {
+    "homogeneous-transformations": "git+https://github.com/PeterTadich/homogeneous-transformations.git",
+    "lu-decomposition": "git+https://github.com/PeterTadich/lu-decomposition.git",
+    "matrix-computations": "git+https://github.com/PeterTadich/matrix-computations.git",
+    "singular-value-decomposition": "git+https://github.com/PeterTadich/singular-value-decomposition.git"
+  }
 }
