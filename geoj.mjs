@@ -5,6 +5,11 @@
 //To do:
 //    - remove svdClean()
 
+import * as hlao from 'matrix-computations';
+import * as ludcmp from 'lu-decomposition';
+import * as svdcmp from 'singular-value-decomposition';
+import * as mcht from 'homogeneous-transformations';
+
 //see also:
 //DUMMYgeometricJacobian(HTM) in I:\code\spatial_v2\js\graph\transformGraph.js
 //geometricJacobian.js
@@ -78,10 +83,10 @@ function geometricJacobian(Li){
     
     //calc. pe (Equ. 3.32 REF: Robotics Modelling, Planning and Control, Page 112)
     for(var i=0;i<n;i=i+1){ //for all links
-        if(i == 0) var T0n = Aij(Li[i]);
-        else T0n = matrix_multiplication(T0n,Aij(Li[i])); //Aij - transforms a vector from frame {j} to frame {i}
+        if(i == 0) var T0n = mcht.Aij(Li[i]);
+        else T0n = hlao.matrix_multiplication(T0n,mcht.Aij(Li[i])); //Aij - transforms a vector from frame {j} to frame {i}
     }                                                     //T0n - transforms a vector from frame {n} (link n) to frame {0} (link 0)
-    var pe = matrix_multiplication(T0n,p0);
+    var pe = hlao.matrix_multiplication(T0n,p0);
     //only select the first three
     pe.pop();
     if(debug) console.log(pe);
@@ -92,12 +97,12 @@ function geometricJacobian(Li){
         //  - zi-1
         //  - pi-1
         
-        var R0ineg1 = identity_matrix(3);
-        var A0ineg1 = identity_matrix(4);
+        var R0ineg1 = hlao.identity_matrix(3);
+        var A0ineg1 = hlao.identity_matrix(4);
         
         for(var i=0;i<j;i=i+1){ //now look at link i
-            if(i == 0) var T0n = Aij(Li[i]);
-            else T0n = matrix_multiplication(T0n,Aij(Li[i])); //Aij - transforms a vector from frame {j} to frame {i}
+            if(i == 0) var T0n = mcht.Aij(Li[i]);
+            else T0n = hlao.matrix_multiplication(T0n,mcht.Aij(Li[i])); //Aij - transforms a vector from frame {j} to frame {i}
             if(i == (j - 2)){                                 //T0n - transforms a vector from frame {n} (link n) to frame {0} (link 0)
                 var R0ineg1 = [ //R0,i-1
                     [T0n[0][0],T0n[0][1],T0n[0][2]],
@@ -108,8 +113,8 @@ function geometricJacobian(Li){
             }
         }        
         
-        var zineg1 = matrix_multiplication(R0ineg1,z0); //zi-1 (Equ. 3.31 REF: Robotics Modelling, Planning and Control, Page 112)
-        var pineg1 = matrix_multiplication(A0ineg1,p0); //pi-1 (Equ. 3.33 REF: Robotics Modelling, Planning and Control, Page 113)
+        var zineg1 = hlao.matrix_multiplication(R0ineg1,z0); //zi-1 (Equ. 3.31 REF: Robotics Modelling, Planning and Control, Page 112)
+        var pineg1 = hlao.matrix_multiplication(A0ineg1,p0); //pi-1 (Equ. 3.33 REF: Robotics Modelling, Planning and Control, Page 113)
         //console.log(j);
         //console.log(T0n);
     
@@ -121,13 +126,13 @@ function geometricJacobian(Li){
             console.log(pineg1);
         }
     
-        J[j-1] = vector_cross(zineg1,matrix_arithmetic(pe,pineg1,'-'));
+        J[j-1] = hlao.vector_cross(zineg1,hlao.matrix_arithmetic(pe,pineg1,'-'));
         for(var i=0;i<3;i=i+1) J[j-1].push([zineg1[i][0]]);
         if(debug) console.log(J[j-1]);
     }
     
-    J = matrix_transpose(J);
-    if(debug) console.log(size(J));
+    J = hlao.matrix_transpose(J);
+    //if(debug) console.log(size(J));
     return J;
 }
 
@@ -221,7 +226,7 @@ function gJ(T0,pe){ //T0 is "T" "zero"
     
     for(var i=1;i<=n;i=i+1){
         //   - linear velocity
-        JP[i] = vector_cross(z[i-1],matrix_arithmetic(pe,p[i-1],'-'));
+        JP[i] = hlao.vector_cross(z[i-1],hlao.matrix_arithmetic(pe,p[i-1],'-'));
         //   - angular velocity
         JO[i] = z[i-1];
         
@@ -229,7 +234,7 @@ function gJ(T0,pe){ //T0 is "T" "zero"
     }
     
     //console.log(J);
-    J = matrix_transpose(J); //convert each row vector into a column vector
+    J = hlao.matrix_transpose(J); //convert each row vector into a column vector
     //console.log(J);
     
     return J;
@@ -239,8 +244,10 @@ function gJ(T0,pe){ //T0 is "T" "zero"
 //IMPORTANT: better to use svdcmp() too inspect singular values
 //see also I:\code\spatial_v2\js\RMC\RMC_torso.js
 function JacobianInverse(J){
-    var dim = size(J); //get the dimension of the Jacobian matrix
-    var m = dim[0]; //number of rows
+    var m; var n;
+    [m,n] = [J.length,J[0].length];
+    //var dim = size(J); //get the dimension of the Jacobian matrix
+    //var m = dim[0]; //number of rows
     
     //   - adjust matrix for inversion (add dummy zeroes to the start of each row)
     for(var j=0;j<m;j=j+1){ //For each row of J[] add an extra element '0.0' to the beginning of the array (beginning of the row).
@@ -256,7 +263,7 @@ function JacobianInverse(J){
     //printJacobian(J);
     
     //   - calc. J^-1
-    var Jinverse = matrixInverseLU(J,m);
+    var Jinverse = ludcmp.matrixInverseLU(J,m);
     
     //   - re-adjust the matrix
     Jinverse.shift();
@@ -279,9 +286,11 @@ function JacobianInverse(J){
 function JacobianInverse_svdcmp(J){
     var debug = 0;
     
-    var dim = size(J);
-    var m = dim[0]; //matrix rank - number of independent rows (number of rows)
-    var n = dim[1]; //number of columns
+    //var dim = size(J);
+    //var m = dim[0]; //matrix rank - number of independent rows (number of rows)
+    //var n = dim[1]; //number of columns
+    var m; var n;
+    [m,n] = [J.length,J[0].length];
     if(debug) console.log('m: ' + m + ', n: ' + n);
 
     var Jnull = [];
@@ -306,18 +315,18 @@ function JacobianInverse_svdcmp(J){
     }
     Jnull.unshift(offsetRow); //add the row vector of zeroes to the beginning of Jnull[] array - now a 7 x 7 matrix
 
-    if(debug) console.log(size(Jnull));
+    //if(debug) console.log(size(Jnull));
     if(debug) console.log('Jnull adjusted:');
     if(debug) printJacobian(Jnull);
 
-    var w = zeros_vector((n+1),'row'); //row vector where index = 0 is undefined
-    var v = zeros_matrix((n+1),(n+1)); //matrix
-    var uwv = svdcmp(Jnull, m, n, w, v);
+    var w = hlao.zeros_vector((n+1),'row'); //row vector where index = 0 is undefined
+    var v = hlao.zeros_matrix((n+1),(n+1)); //matrix
+    var uwv = svdcmp.svdcmp(Jnull, m, n, w, v);
     //if(debug) console.log(uwv);
 
-    var U = svdClean(uwv[0]); //Drop the first element in the array as it is zero.
-    var S = svdClean(uwv[1]); //W
-    var V = svdClean(uwv[2]);
+    var U = svdcmp.svdClean(uwv[0]); //Drop the first element in the array as it is zero.
+    var S = svdcmp.svdClean(uwv[1]); //W
+    var V = svdcmp.svdClean(uwv[2]);
     if(debug){
         console.log('U:');
         print_multi_array(U);
@@ -334,7 +343,7 @@ function JacobianInverse_svdcmp(J){
     if(debug) console.log('W = ' + w);
 
     //   - Get the rank.
-    var rank = matrix_rank(w);
+    var rank = hlao.matrix_rank(w);
     if(debug) console.log('Matrix rank = ' + rank);
 
     //   - Get the condition number of the matrix.
@@ -369,11 +378,11 @@ function JacobianInverse_svdcmp(J){
     ];
     if(debug) console.log(Sinv);
     
-    var JJTinv = matrix_multiplication(
-            matrix_multiplication(
+    var JJTinv = hlao.matrix_multiplication(
+            hlao.matrix_multiplication(
                 V,Sinv
             ),
-            matrix_transpose(U)
+            hlao.matrix_transpose(U)
         );
     if(debug){
         console.log('(J x JT)-1:');
@@ -384,6 +393,7 @@ function JacobianInverse_svdcmp(J){
     return JJTinv;
 }
 
+/*
 //see I:\code\spatial_v2\js\FIT5147\rot3dfit.js
 function svdClean(A){
     var dim = size(A);
@@ -402,13 +412,16 @@ function svdClean(A){
     
     return A;
 }
+*/
 
 //print the Jacobian
 //see also I:\code\spatial_v2\js\RMC\RMC_torso.js
 function printJacobian(J){
-    var dim = size(J); //get the dimension of the Jacobian matrix
-    var m = dim[0]; //number of rows
-    var n = dim[1]; //number of columns
+    //var dim = size(J); //get the dimension of the Jacobian matrix
+    //var m = dim[0]; //number of rows
+    //var n = dim[1]; //number of columns
+    var m; var n;
+    [m,n] = [J.length,J[0].length];
     
     var Jstr = "";
     for(var j=0;j<m;j=j+1){ //row
