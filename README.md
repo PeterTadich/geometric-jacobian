@@ -44,8 +44,7 @@ import * as geoj from './geoj.mjs';
 
 #### geoj.geometricJacobian()
 
-Get the Jacobian matrix - extended version.
-Copy the following code to index.mjs
+Get the Jacobian matrix - extended version. Copy the following code to index.mjs
 
 ```js
 //npm install https://github.com/PeterTadich/industrial-robots https://github.com/PeterTadich/geometric-jacobian
@@ -96,8 +95,7 @@ Result:
 
 #### geoj.gJ()
 
-Get the Jacobian matrix (using T0, pe).
-Copy the following code to index.mjs
+Get the Jacobian matrix (using T0, pe). Copy the following code to index.mjs
 
 ```js
 //npm install https://github.com/PeterTadich/industrial-robots https://github.com/PeterTadich/geometric-jacobian https://github.com/PeterTadich/homogeneous-transformations
@@ -126,8 +124,7 @@ Result:
 
 #### geoj.JacobianInverse_svdcmp()
 
-Run diagnostic's. Get the rank and condition number of the Jacobian matrix.
-Copy the following code to index.mjs
+Run diagnostic's. Get the rank and condition number of the Jacobian matrix. Copy the following code to index.mjs
 
 ```js
 //npm install https://github.com/PeterTadich/industrial-robots https://github.com/PeterTadich/geometric-jacobian
