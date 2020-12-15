@@ -409,9 +409,9 @@ function JacobianInverse_svdcmp(J,Dx){
             if((w_min > w[j]) && (w[j] > 1e-6)) w_min = w[j]; // w_min must be non zero.
         }
         var cond_numb = w_max/w_min;
-        if(debug) console.log('sigma 1 = ' + w_max);
-        if(debug) console.log('sigma r = ' + w_min);
-        if(debug) console.log('Matrix condition number = ' + cond_numb);
+        console.log('sigma 1 = ' + w_max);
+        console.log('sigma r = ' + w_min);
+        console.log('Matrix condition number = ' + cond_numb);
         //if(cond_numb > 900.0) alert('Condition number: ' + cond_numb);
     }
     
