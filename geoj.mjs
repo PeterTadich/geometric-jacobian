@@ -334,8 +334,9 @@ function JacobianInverse(J){
 }
 
 //see also I:\code\spatial_v2\js\RMC\RMC_torso.js
-function JacobianInverse_svdcmp(J){
+function JacobianInverse_svdcmp(J,Dx){
     var debug = 0;
+    //var diagnostic = 1; //Dx
     
     //var dim = size(J);
     //var m = dim[0]; //matrix rank - number of independent rows (number of rows)
@@ -394,21 +395,25 @@ function JacobianInverse_svdcmp(J){
     if(debug) console.log('W = ' + w);
 
     //   - Get the rank.
-    var rank = hlao.matrix_rank(w);
-    if(debug) console.log('Matrix rank = ' + rank);
+    if(diagnostic){
+        var rank = hlao.matrix_rank(w);
+        console.log('Matrix rank = ' + rank);
+    }
 
     //   - Get the condition number of the matrix.
-    var w_min = +1e6;
-    var w_max = -1e6;
-    for(var j=0;j<w.length;j=j+1){
-        if(w_max < w[j]) w_max = w[j];
-        if((w_min > w[j]) && (w[j] > 1e-6)) w_min = w[j]; // w_min must be non zero.
+    if(diagnostic){
+        var w_min = +1e6;
+        var w_max = -1e6;
+        for(var j=0;j<w.length;j=j+1){
+            if(w_max < w[j]) w_max = w[j];
+            if((w_min > w[j]) && (w[j] > 1e-6)) w_min = w[j]; // w_min must be non zero.
+        }
+        var cond_numb = w_max/w_min;
+        if(debug) console.log('sigma 1 = ' + w_max);
+        if(debug) console.log('sigma r = ' + w_min);
+        if(debug) console.log('Matrix condition number = ' + cond_numb);
+        //if(cond_numb > 900.0) alert('Condition number: ' + cond_numb);
     }
-    var cond_numb = w_max/w_min;
-    if(debug) console.log('sigma 1 = ' + w_max);
-    if(debug) console.log('sigma r = ' + w_min);
-    if(debug) console.log('Matrix condition number = ' + cond_numb);
-    if(cond_numb > 900.0) alert('Condition number: ' + cond_numb);
     
     //Calc. inverse
     var diag = [];
