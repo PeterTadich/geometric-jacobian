@@ -13,7 +13,7 @@ import * as mcht from 'homogeneous-transformations';
 //see also:
 //DUMMYgeometricJacobian(HTM) in I:\code\spatial_v2\js\graph\transformGraph.js
 //geometricJacobian.js
-function geometricJacobian(Li){
+function geometricJacobian(mua){
     /*
     //example of usage: three-link planar arm
     //example from - REF: Robotics Modelling, Planning and Control, Page 143 (section 3.7.5)
@@ -67,7 +67,10 @@ function geometricJacobian(Li){
     
     var debug = 0;
     
+    var Li = mua.DH;
     var n = Li.length;
+    var jt = []; //joint type
+    for(var i=1;i<=n;i=i+1) jt[i] = mua.jt[i-1];
     
     var Ri_neg1i = "R0," + n + " = "; //Ri-1,i for i = 1 o n, transforms a vector from frame {i} to frame {i-1} (base frame)
     for(var i=1;i<=n;i=i+1){
@@ -103,7 +106,7 @@ function geometricJacobian(Li){
         for(var i=0;i<j;i=i+1){ //now look at link i
             if(i == 0) var T0n = mcht.Aij(Li[i]);
             else T0n = hlao.matrix_multiplication(T0n,mcht.Aij(Li[i])); //Aij - transforms a vector from frame {j} to frame {i}
-            if(i == (j - 2)){                                 //T0n - transforms a vector from frame {n} (link n) to frame {0} (link 0)
+            if(i == (j - 2)){                                           //T0n - transforms a vector from frame {n} (link n) to frame {0} (link 0)
                 var R0ineg1 = [ //R0,i-1
                     [T0n[0][0],T0n[0][1],T0n[0][2]],
                     [T0n[1][0],T0n[1][1],T0n[1][2]],
@@ -117,17 +120,25 @@ function geometricJacobian(Li){
         var pineg1 = hlao.matrix_multiplication(A0ineg1,p0); //pi-1 (Equ. 3.33 REF: Robotics Modelling, Planning and Control, Page 113)
         //console.log(j);
         //console.log(T0n);
-    
+        
         //only select the first three
         pineg1.pop();
-    
+        
         if(debug){
             console.log(zineg1);
             console.log(pineg1);
         }
-    
-        J[j-1] = hlao.vector_cross(zineg1,hlao.matrix_arithmetic(pe,pineg1,'-'));
-        for(var i=0;i<3;i=i+1) J[j-1].push([zineg1[i][0]]);
+        
+        //   - revolute
+        if(jt[i].includes('R')){
+            J[j-1] = hlao.vector_cross(zineg1,hlao.matrix_arithmetic(pe,pineg1,'-'));
+            for(var i=0;i<3;i=i+1) J[j-1].push([zineg1[i][0]]);
+        }
+        //   - prismatic
+        if(jt[i].includes('P')){
+            J[j-1] = zineg1;
+            for(var i=0;i<3;i=i+1) J[j-1].push([0.0]);
+        }
         if(debug) console.log(J[j-1]);
     }
     
@@ -241,7 +252,7 @@ function gJ(T0,pe){ //T0 is "T" "zero"
 }
 
 //Jacobian inversion (returns J^-1)
-//IMPORTANT: better to use svdcmp() too inspect singular values
+//IMPORTANT: better to use svdcmp() to inspect singular values
 //see also I:\code\spatial_v2\js\RMC\RMC_torso.js
 function JacobianInverse(J){
     var m; var n;
