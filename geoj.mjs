@@ -336,7 +336,7 @@ function JacobianInverse(J){
 //see also I:\code\spatial_v2\js\RMC\RMC_torso.js
 function JacobianInverse_svdcmp(J,Dx){
     var debug = 0;
-    //var diagnostic = 1; //Dx
+    //var Dx = 1; //Dx = diagnostic
     
     //var dim = size(J);
     //var m = dim[0]; //matrix rank - number of independent rows (number of rows)
@@ -395,13 +395,13 @@ function JacobianInverse_svdcmp(J,Dx){
     if(debug) console.log('W = ' + w);
 
     //   - Get the rank.
-    if(diagnostic){
+    if(Dx){
         var rank = hlao.matrix_rank(w);
         console.log('Matrix rank = ' + rank);
     }
 
     //   - Get the condition number of the matrix.
-    if(diagnostic){
+    if(Dx){
         var w_min = +1e6;
         var w_max = -1e6;
         for(var j=0;j<w.length;j=j+1){
