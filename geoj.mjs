@@ -10,6 +10,34 @@ import * as ludcmp from 'lu-decomposition';
 import * as svdcmp from 'singular-value-decomposition';
 import * as mcht from 'homogeneous-transformations';
 
+/*
+%MATLAB
+mdl_puma560
+q = [0.6,0.19,0.75,0.91,0.11,0.71];
+p560.jacob0(q)
+%ans =
+%    0.0745   -0.2910   -0.2237         0         0         0
+%    0.1568   -0.1991   -0.1531         0         0         0
+%   -0.0000    0.0873   -0.3367         0         0         0
+%    0.0000    0.5646    0.5646   -0.6665    0.7309   -0.6463
+%   -0.0000   -0.8253   -0.8253   -0.4560   -0.2436   -0.5472
+%    1.0000    0.0000    0.0000    0.5898    0.6376    0.5318
+*/
+
+/*
+%MATLAB
+mdl_stanford
+q = [0.6,0.19,0.75,0.91,0.11,0.71];
+stanf.jacob0(q)
+%ans =
+%   -0.2330    0.8162    0.1559    0.0015    0.2534         0
+%    0.0992    0.5584    0.1066    0.0286   -0.0211         0
+%         0   -0.2134    0.9820   -0.0033   -0.0673         0
+%   -0.0000   -0.5646         0    0.1559    0.0516    0.2632
+%         0    0.8253         0    0.1066    0.9919    0.0984
+%    1.0000    0.0000         0    0.9820   -0.1159    0.9597
+*/
+
 //see also:
 //DUMMYgeometricJacobian(HTM) in I:\code\spatial_v2\js\graph\transformGraph.js
 //geometricJacobian.js
@@ -72,12 +100,14 @@ function geometricJacobian(mua){
     var jt = []; //joint type
     for(var i=1;i<=n;i=i+1) jt[i] = mua.jt[i-1];
     
-    var Ri_neg1i = "R0," + n + " = "; //Ri-1,i for i = 1 o n, transforms a vector from frame {i} to frame {i-1} (base frame)
-    for(var i=1;i<=n;i=i+1){
-        Ri_neg1i = Ri_neg1i + "R" + (i-1) + "," + i;
-        if(i != n) Ri_neg1i = Ri_neg1i  + " * ";
+    if(debug){
+        var Ri_neg1i = "R0," + n + " = "; //Ri-1,i for i = 1 o n, transforms a vector from frame {i} to frame {i-1} (base frame)
+        for(var i=1;i<=n;i=i+1){
+            Ri_neg1i = Ri_neg1i + "R" + (i-1) + "," + i;
+            if(i != n) Ri_neg1i = Ri_neg1i  + " * ";
+        }
+        console.log(Ri_neg1i);
     }
-    if(debug) console.log(Ri_neg1i);
     
     var J = []; //the Jacobian matrix
     var z0 = [[0.0],[0.0],[1.0]]; //Allows selection of the third column - (equ. 3.31).
@@ -130,12 +160,12 @@ function geometricJacobian(mua){
         }
         
         //   - revolute
-        if(jt[i].includes('R')){
+        if(jt[j].includes('R')){
             J[j-1] = hlao.vector_cross(zineg1,hlao.matrix_arithmetic(pe,pineg1,'-'));
             for(var i=0;i<3;i=i+1) J[j-1].push([zineg1[i][0]]);
         }
         //   - prismatic
-        if(jt[i].includes('P')){
+        if(jt[j].includes('P')){
             J[j-1] = zineg1;
             for(var i=0;i<3;i=i+1) J[j-1].push([0.0]);
         }
@@ -183,7 +213,7 @@ var pe = [[pe[0][3]],[pe[1][3]],[pe[2][3]]];
 var Jcheck = gJ(TOn,pe);
 printJacobian(Jcheck);
 */
-function gJ(T0,pe){ //T0 is "T" "zero"
+function gJ(T0,pe,jt){ //T0 is "T" "zero"
     var n = T0.length;
     
     //check for homogeneous representation
@@ -236,10 +266,20 @@ function gJ(T0,pe){ //T0 is "T" "zero"
     T0.shift();
     
     for(var i=1;i<=n;i=i+1){
-        //   - linear velocity
-        JP[i] = hlao.vector_cross(z[i-1],hlao.matrix_arithmetic(pe,p[i-1],'-'));
-        //   - angular velocity
-        JO[i] = z[i-1];
+        //   - revolute
+        if(jt[i-1].includes('R')){
+            //   - linear velocity
+            JP[i] = hlao.vector_cross(z[i-1],hlao.matrix_arithmetic(pe,p[i-1],'-'));
+            //   - angular velocity
+            JO[i] = z[i-1];
+        }
+        //   - prismatic
+        if(jt[i-1].includes('P')){
+            //   - linear velocity
+            JP[i] = z[i-1];
+            //   - angular velocity
+            JO[i] = [[0.0],[0.0],[0.0]];
+        }
         
         J.push([JP[i][0][0],JP[i][1][0],JP[i][2][0],JO[i][0][0],JO[i][1][0],JO[i][2][0]]); //row vector
     }
