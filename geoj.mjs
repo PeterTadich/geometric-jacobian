@@ -454,7 +454,7 @@ function print_multi_array(A){
         for(var i=0;i<m;i=i+1){ //row
             str = str + '    [';
             for(var j=0;j<n;j=j+1){ //column
-                str = str + A[i][j].toFixed(4);
+                str = str + A[i][j][0].toFixed(4);
                 if(j < n-1) str = str + ',';
             }
             str = str + ']';
