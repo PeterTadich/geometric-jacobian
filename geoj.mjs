@@ -424,6 +424,7 @@ function JacobianInverse_svdcmp(J,Dx){
         else diag[i] = 0.0;
     }
     if(debug) console.log(diag);
+    /*
     var Sinv = [ //IMPORTANT: fix magic number.
         [diag[0],     0.0,     0.0,     0.0,     0.0,     0.0],
         [    0.0, diag[1],     0.0,     0.0,     0.0,     0.0],
@@ -432,6 +433,11 @@ function JacobianInverse_svdcmp(J,Dx){
         [    0.0,     0.0,     0.0,     0.0, diag[4],     0.0],
         [    0.0,     0.0,     0.0,     0.0,     0.0, diag[5]]
     ];
+    */
+    Sinv = identity_matrix(S.length);
+    for(var i=0;i<S.length;i=i+1){
+        Sinv[i][i] = diag[i];
+    }
     if(debug) console.log(Sinv);
     
     var JJTinv = hlao.matrix_multiplication(
