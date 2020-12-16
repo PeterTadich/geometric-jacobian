@@ -432,7 +432,7 @@ function JacobianInverse_svdcmp(J){
         [    0.0,     0.0,     0.0,     0.0,     0.0, diag[5]]
     ];
     */
-    Sinv = hlao.identity_matrix(S.length);
+    var Sinv = hlao.identity_matrix(S.length);
     for(var i=0;i<S.length;i=i+1){
         Sinv[i][i] = diag[i];
     }
