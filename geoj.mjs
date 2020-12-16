@@ -438,19 +438,19 @@ function JacobianInverse_svdcmp(J){
     }
     if(debug) console.log(Sinv);
     
-    var JJTinv = hlao.matrix_multiplication(
+    var Jinv = hlao.matrix_multiplication(
             hlao.matrix_multiplication(
                 V,Sinv
             ),
             hlao.matrix_transpose(U)
         );
     if(debug){
-        console.log('(J x JT)-1:');
-        print_multi_array(JJTinv);
+        console.log('(J)-1:');
+        print_multi_array(Jinv);
     }
     
     //return matrix_multiplication(U,matrix_transpose(V));
-    return([JJTinv,Dx]);
+    return([Jinv,Dx]);
 }
 
 /*
