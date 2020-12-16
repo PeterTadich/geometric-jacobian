@@ -334,6 +334,23 @@ function JacobianInverse(J){
 }
 
 //see also I:\code\spatial_v2\js\RMC\RMC_torso.js
+/*
+%MATLAB
+mdl_puma560
+J = p560.jacob0(qr);
+rank(J) % = 5
+cond(Jinv) % = 1.4156e+19
+w = svd(J)
+%ans =
+%    1.9066
+%    1.7321
+%    0.5660
+%    0.0166
+%    0.0081
+%    0.0000
+w(1)/w(6) % = 1.4156e+19
+w(1)/w(5) % = 235.3827 hence dependent on TOL
+*/
 function JacobianInverse_svdcmp(J){
     var debug = 0;
     var Dx = {}; //diagnostic
