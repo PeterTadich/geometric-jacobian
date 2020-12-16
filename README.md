@@ -133,7 +133,11 @@ import * as mcir from 'industrial-robots';
 import * as geoj from 'geometric-jacobian';
 
 var mua = mcir.puma560(); //get the robot
-var J = geoj.geometricJacobian(mua);
+var qr = [0.0,Math.PI/2.0,-1.0*Math.PI/2.0,0.0,0.0,0.0]; //pose
+mua.DH.forEach((q, i) => {mua.DH[i][3] = qr[i]});
+
+var J = geoj.geometricJacobian(mua); //calc Jacobian
+geoj.print_multi_array(J);
 
 //convert multi to 2 dimensional array
 var m; var n;
@@ -145,23 +149,34 @@ for(var i=0;i<m;i=i+1){
         Jc[i][j] = J[i][j][0];
     }
 }
-var Jinv; var Dx; //diagnostic
+
+var Jinv; var Dx; //inverse and diagnostic's
 [Jinv,Dx] = geoj.JacobianInverse_svdcmp(Jc); 
 console.log('Matrix rank = ' + Dx.rank.toFixed(4));
 console.log('Matrix condition number = ' + Dx.cond_numb.toFixed(4));
-geoj.printJacobian(Jinv);
+geoj.printJacobian(Jinv); //Jacobian inverse
 ```
 
 Result:
 
 ```js
-Matrix rank = 6
-Matrix condition number = 72.3347
+Jacobian:
+[
+    [0.1500,-0.8636,-0.4318,0.0000, 0.0000,0.0000],
+    [0.0203, 0.0000, 0.0000,0.0000, 0.0000,0.0000],
+    [0.0000, 0.0203, 0.0203,0.0000, 0.0000,0.0000],
+    [0.0000, 0.0000, 0.0000,0.0000, 0.0000,0.0000],
+    [0.0000,-1.0000,-1.0000,0.0000,-1.0000,0.0000],
+    [1.0000, 0.0000, 0.0000,1.0000, 0.0000,1.0000]
+];
+Diagnostic's:
+   - Matrix rank = 5
+   - Matrix condition number = 234.7075
 Jacobian inverse:
-    -6.4679   9.4542  0.0000  0.0000 -0.0000 -0.0000
-    -4.2459   2.0182  1.9035  0.0000 -0.0000 -0.0000
-    -1.1008   0.5232 -2.4762 -0.0000 -0.0000 -0.0000
-    -5.3793 -29.8352 -4.0937 -1.9978  7.2944  5.0774
-     7.4052  -7.5875  0.3515  0.7309 -0.2436  0.6376
-     9.2500  24.4067  4.1186  1.3394 -7.7975 -4.5149
+    -0.0000  49.2611  -0.0000 0.0000  0.0000  0.0000
+    -2.3159  17.1125 -49.2611 0.0000  0.0000  0.0000
+     2.3159 -17.1125  98.5222 0.0000  0.0000 -0.0000
+     0.0000 -24.6305   0.0000 0.0000  0.0000  0.5000
+     0.0000   0.0000 -49.2611 0.0000 -1.0000  0.0000
+     0.0000 -24.6305   0.0000 0.0000 -0.0000  0.5000
 ```
