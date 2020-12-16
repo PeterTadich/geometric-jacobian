@@ -145,7 +145,10 @@ for(var i=0;i<m;i=i+1){
         Jc[i][j] = J[i][j][0];
     }
 }
-var Jinv = geoj.JacobianInverse_svdcmp(Jc,1); //set 'Dx' = 1 (diagnostic)
+var Jinv; var Dx; //diagnostic
+[Jinv,Dx] = geoj.JacobianInverse_svdcmp(Jc); 
+console.log('Matrix rank = ' + Dx.rank.toFixed(4));
+console.log('Matrix condition number = ' + Dx.cond_numb.toFixed(4));
 geoj.printJacobian(Jinv);
 ```
 
@@ -153,8 +156,6 @@ Result:
 
 ```js
 Matrix rank = 6
-sigma 1 = 1.6725
-sigma r = 0.0231
 Matrix condition number = 72.3347
 Jacobian inverse:
     -6.4679   9.4542  0.0000  0.0000 -0.0000 -0.0000
