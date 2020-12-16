@@ -334,9 +334,9 @@ function JacobianInverse(J){
 }
 
 //see also I:\code\spatial_v2\js\RMC\RMC_torso.js
-function JacobianInverse_svdcmp(J,Dx){
+function JacobianInverse_svdcmp(J){
     var debug = 0;
-    //var Dx = 1; //Dx = diagnostic
+    var Dx = {}; //diagnostic
     
     //var dim = size(J);
     //var m = dim[0]; //matrix rank - number of independent rows (number of rows)
@@ -395,24 +395,22 @@ function JacobianInverse_svdcmp(J,Dx){
     if(debug) console.log('W = ' + w);
 
     //   - Get the rank.
-    if(Dx){
-        var rank = hlao.matrix_rank(w);
-        console.log('Matrix rank = ' + rank);
-    }
-
+    Dx.rank = hlao.matrix_rank(w);
+    if(debug) console.log('Matrix rank = ' + Dx.rank);
+    
     //   - Get the condition number of the matrix.
-    if(Dx){
-        var w_min = +1e6;
-        var w_max = -1e6;
-        for(var j=0;j<w.length;j=j+1){
-            if(w_max < w[j]) w_max = w[j];
-            if((w_min > w[j]) && (w[j] > 1e-6)) w_min = w[j]; // w_min must be non zero.
-        }
-        var cond_numb = w_max/w_min;
-        console.log('sigma 1 = ' + w_max);
-        console.log('sigma r = ' + w_min);
-        console.log('Matrix condition number = ' + cond_numb);
-        //if(cond_numb > 900.0) alert('Condition number: ' + cond_numb);
+    Dx.w_min = +1e6;
+    Dx.w_max = -1e6;
+    for(var j=0;j<w.length;j=j+1){
+        if(Dx.w_max < w[j]) Dx.w_max = w[j];
+        if((Dx.w_min > w[j]) && (w[j] > 1e-6)) Dx.w_min = w[j]; // w_min must be non zero.
+    }
+    Dx.cond_numb = Dx.w_max/Dx.w_min;
+    if(debug){
+        console.log('sigma 1 = ' + Dx.w_max);
+        console.log('sigma r = ' + Dx.w_min);
+        console.log('Matrix condition number = ' + Dx.cond_numb);
+        //if(cond_numb > 900.0) alert('Condition number: ' + Dx.cond_numb);
     }
     
     //Calc. inverse
@@ -434,7 +432,7 @@ function JacobianInverse_svdcmp(J,Dx){
         [    0.0,     0.0,     0.0,     0.0,     0.0, diag[5]]
     ];
     */
-    Sinv = identity_matrix(S.length);
+    Sinv = hlao.identity_matrix(S.length);
     for(var i=0;i<S.length;i=i+1){
         Sinv[i][i] = diag[i];
     }
@@ -452,7 +450,7 @@ function JacobianInverse_svdcmp(J,Dx){
     }
     
     //return matrix_multiplication(U,matrix_transpose(V));
-    return JJTinv;
+    return([JJTinv,Dx]);
 }
 
 /*
